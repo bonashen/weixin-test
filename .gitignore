@@ -47,3 +47,7 @@ Temporary Items
 
 #npm debug log file
 npm-debug*
+node_modules
+
+#winxin config
+config.js

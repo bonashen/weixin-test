@@ -9,6 +9,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var session = require("express-session");
 var parseurl = require('parseurl');
+var wechat = require("wechat");
 
 var app = express();
 
@@ -25,24 +26,56 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //session
-app.use(session({
-    secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: true
-}));
-
-app.use(function (req, res, next) {
-    var views = req.session.views;
-    if (!views) {
-        views = req.session.views = {};
-    }
-    var pathname = parseurl(req).pathname;
-    views[pathname] = (views[pathname] || 0) + 1;
-    next();
-});
+//app.use(session({
+//    secret: 'keyboard cat',
+//    resave: false,
+//    saveUninitialized: true
+//}));
+//
+//app.use(function (req, res, next) {
+//    var views = req.session.views;
+//    if (!views) {
+//        views = req.session.views = {};
+//    }
+//    var pathname = parseurl(req).pathname;
+//    views[pathname] = (views[pathname] || 0) + 1;
+//    next();
+//});
 
 app.use('/', routes);
 app.use('/users', users);
+
+//for wechat
+var config = require("./config");
+app.use(express.query());
+
+app.use('/wechat', wechat(config.mp).text(function (message, req, res) {
+    console.log(message);
+    res.reply({type: "text", content: "我还没有想好怎么跟你说！"});
+}).image(function (message, req, res) {
+    console.log(message);
+    res.reply('还没想好图片怎么处理啦。');
+}).location(function (message, req, res) {
+    console.log(message);
+    res.reply('想和我约会吗，不要的啦。妈妈会打屁股呢！');
+}).voice(function (message, req, res) {
+    console.log(message);
+    res.reply('心情不好，不想搭理你。');
+}).link(function (message, req, res) {
+    console.log(message);
+    res.reply('点连接进来的是吧！');
+}).event(function (message, req, res) {
+    console.log(message);
+    if (message.Event === 'subscribe') {
+        // 用户添加时候的消息
+        res.reply('谢谢添加Spmgt123公共帐号:)\n回复相关关键词，将会得到相关信息。');
+    } else if (message.Event === 'unsubscribe') {
+        res.reply('Bye!');
+    } else {
+        res.reply('暂未支持! Coming soon!');
+    }
+}).middlewarify());
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
